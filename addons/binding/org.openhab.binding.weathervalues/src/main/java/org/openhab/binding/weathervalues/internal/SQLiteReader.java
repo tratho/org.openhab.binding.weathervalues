@@ -12,7 +12,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,15 +24,15 @@ import org.slf4j.LoggerFactory;
  *
  * @author Thomas Traunbauer - Initial contribution
  */
-public class SQLiteReader implements Runnable {
+public class SQLiteReader implements Runnable, SQLReader {
 
     private Logger logger = LoggerFactory.getLogger(SQLiteReader.class);
 
-    private Connection connection;
-    private List<SQLiteReaderListener> listOfListener;
-
     private String host;
     private String dbName;
+    private List<SQLReaderListener> listOfListener;
+
+    private Connection connection;
 
     // current
     private Double barometer;
@@ -49,9 +48,6 @@ public class SQLiteReader implements Runnable {
     private Double outTempDayMax;
     private Time outTempDayMaxTime;
     private Double rainCurrentDay;
-
-    // week
-    private Double rainCurrentWeek;
 
     // month
     private List<Double> listOfRainMonth;
@@ -71,74 +67,108 @@ public class SQLiteReader implements Runnable {
         Class.forName("org.sqlite.JDBC");
     }
 
-    public void open() throws SQLException {
-        // host = 192.168.0.108
-        // dbName = weewx.db
-        String url = "jdbc:sqlite::resource:http://" + host + "/" + dbName;
-        connection = DriverManager.getConnection(url);
-    }
-
-    public void close() throws SQLException {
-        connection.close();
-    }
-
-    public ResultSet getResultSet(String sql) throws SQLException {
-        Statement stmt = connection.createStatement();
-        return stmt.executeQuery(sql);
-    }
-
     @Override
     public void run() {
         try {
             pullCurrent();
+        } catch (SQLException e) {
+            logger.warn("Error during reading values form database");
+        }
+        try {
             pullDay();
-
+        } catch (SQLException e) {
+            logger.warn("Error during reading values form database");
+        }
+        try {
             pullDayRain();
-            pullWeekRain();
+        } catch (SQLException e) {
+            logger.warn("Error during reading values form database");
+        }
+        try {
             pullMonthRain();
         } catch (SQLException e) {
-            logger.error("Error during operation on database ", e);
+            logger.warn("Error during reading values form database");
         }
         callAllListener();
     }
 
+    @Override
+    public void open() throws SQLException {
+        connection = DriverManager.getConnection("jdbc:sqlite::resource:http://" + host + "/" + dbName);
+    }
+
+    @Override
+    public void close() throws SQLException {
+        connection.close();
+    }
+
+    @Override
+    public ResultSet getResultSet(String sql) throws SQLException {
+        return connection.createStatement().executeQuery(sql);
+    }
+
+    @Override
+    public void removeListener(SQLReaderListener listener) {
+        for (int i = 0; i < listOfListener.size(); i++) {
+            if (listOfListener.get(i) == listener) {
+                listOfListener.remove(i);
+            }
+        }
+        listOfListener.add(listener);
+    }
+
+    @Override
+    public void addListener(SQLReaderListener listener) {
+        listOfListener.add(listener);
+    }
+
+    @Override
+    public void callAllListener() {
+        for (SQLReaderListener listener : listOfListener) {
+            listener.refreshValues();
+        }
+    }
+
     private void pullCurrent() throws SQLException {
-        open();
         String sql = "SELECT barometer, outTemp, outHumidity, windSpeed, windDir, rainRate, extraTemp1 FROM archive ORDER BY dateTime DESC LIMIT 1";
         ResultSet resultSet = getResultSet(sql);
 
         String sBarometer = resultSet.getString("barometer");
-        String sOutTemp = resultSet.getString("outTemp");
-        String sOutHumidity = resultSet.getString("outHumidity");
-        String sWindSpeed = resultSet.getString("windSpeed");
-        String sRainRate = resultSet.getString("rainRate");
-        String sWindDir = resultSet.getString("windDir");
-
         if (sBarometer != null) {
             barometer = Converter.inchOfHG_to_Millibar(Double.parseDouble(sBarometer));
         } else {
             barometer = null;
         }
+
+        String sOutTemp = resultSet.getString("outTemp");
         if (sOutTemp != null) {
             outTemp = Converter.fahrenheit_to_Celsius(Double.parseDouble(sOutTemp));
         } else {
             outTemp = null;
         }
+
+        String sOutHumidity = resultSet.getString("outHumidity");
         if (sOutHumidity != null) {
             outHumidity = Double.parseDouble(sOutHumidity);
         } else {
             outHumidity = null;
         }
+
+        String sWindSpeed = resultSet.getString("windSpeed");
         if (sWindSpeed != null) {
             windSpeed = Converter.knoten_to_kmh(Double.parseDouble(sWindSpeed));
         } else {
             windSpeed = null;
         }
+
+        String sRainRate = resultSet.getString("rainRate");
         if (sRainRate != null) {
             rainRate = Converter.inchPerHour_to_MillimeterPerHour(Double.parseDouble(sRainRate));
         } else {
             rainRate = null;
         }
+
+        String sWindDir = resultSet.getString("windDir");
         if (sWindDir != null) {
             windDir = Converter.grad_to_windDirection((int) Double.parseDouble(sWindDir));
         } else {
@@ -146,35 +176,34 @@ public class SQLiteReader implements Runnable {
         }
 
         resultSet.close();
-        close();
     }
 
     private void pullDay() throws SQLException {
-        open();
-
         String sql = "SELECT min, minTime, max, maxTime FROM archive_day_outTemp ORDER BY dateTime DESC LIMIT 1";
         ResultSet resultSet = getResultSet(sql);
 
         String sMinOutTemp = resultSet.getString("min");
-        String sMinOutTempTime = resultSet.getString("minTime");
-        String sMaxOutTemp = resultSet.getString("max");
-        String sMaxOutTempTime = resultSet.getString("maxTime");
-
         try {
             outTempDayMin = Converter.fahrenheit_to_Celsius(Double.parseDouble(sMinOutTemp));
         } catch (NumberFormatException e) {
             outTempDayMin = null;
         }
+
+        String sMinOutTempTime = resultSet.getString("minTime");
         try {
             outTempDayMinTime = Converter.seconds_to_Time(Long.parseLong(sMinOutTempTime));
         } catch (NumberFormatException e) {
             outTempDayMinTime = null;
         }
+
+        String sMaxOutTemp = resultSet.getString("max");
         try {
             outTempDayMax = Converter.fahrenheit_to_Celsius(Double.parseDouble(sMaxOutTemp));
         } catch (NumberFormatException e) {
             outTempDayMax = null;
         }
+
+        String sMaxOutTempTime = resultSet.getString("maxTime");
         try {
             outTempDayMaxTime = Converter.seconds_to_Time(Long.parseLong(sMaxOutTempTime));
         } catch (NumberFormatException e) {
@@ -182,17 +211,13 @@ public class SQLiteReader implements Runnable {
         }
 
         resultSet.close();
-        close();
     }
 
     private void pullDayRain() throws SQLException {
-        open();
-
         String sql = "SELECT sum FROM archive_day_rain ORDER BY dateTime DESC LIMIT 1";
         ResultSet resultSet = getResultSet(sql);
 
         String sRain = resultSet.getString("sum");
-
         try {
             rainCurrentDay = Converter.inch_to_Millimeter(Double.parseDouble(sRain));
         } catch (NumberFormatException e) {
@@ -200,26 +225,11 @@ public class SQLiteReader implements Runnable {
         }
 
         resultSet.close();
-        close();
-    }
-
-    private void pullWeekRain() throws SQLException {
-        if (listOfTime.size() == 0) {
-            getRainData();
-        }
-        int currentDay = listOfTime.get(listOfTime.size() - 1).getDayOfWeek();
-
-        double rainWeekTemp = 0;
-        for (int i = listOfTime.size() - currentDay; i < listOfTime.size(); i++) {
-            rainWeekTemp += listOfRain.get(i);
-        }
-
-        rainCurrentWeek = Converter.inch_to_Millimeter(rainWeekTemp);
     }
 
     private void pullMonthRain() throws SQLException {
         if (listOfTime.size() == 0) {
-            getRainData();
+            pullRainData();
         }
 
         listOfRainMonth.clear();
@@ -237,11 +247,10 @@ public class SQLiteReader implements Runnable {
         }
     }
 
-    private void getRainData() throws SQLException {
+    private void pullRainData() throws SQLException {
         listOfTime.clear();
         listOfRain.clear();
 
-        open();
         String sql = "SELECT dateTime, sum FROM archive_day_rain ORDER BY dateTime";
         ResultSet resultSet = getResultSet(sql);
 
@@ -263,31 +272,6 @@ public class SQLiteReader implements Runnable {
         }
 
         resultSet.close();
-        close();
-    }
-
-    public void removeListener(SQLiteReaderListener listener) {
-        for (int i = 0; i < listOfListener.size(); i++) {
-            if (listOfListener.get(i) == listener) {
-                listOfListener.remove(i);
-            }
-        }
-        listOfListener.add(listener);
-    }
-
-    public void addListener(SQLiteReaderListener listener) {
-        listOfListener.add(listener);
-    }
-
-    public void callAllListener() {
-        for (int i = 0; i < listOfListener.size(); i++) {
-            listOfListener.get(i).getUpdate();
-        }
-    }
-
-    public void tryConnect() throws SQLException {
-        open();
-        close();
     }
 
     public Double getBarometer() {
@@ -335,7 +319,22 @@ public class SQLiteReader implements Runnable {
     }
 
     public Double getRainCurrentWeek() {
-        return rainCurrentWeek;
+        if (listOfRainMonth.size() == 0) {
+            try {
+                pullMonthRain();
+            } catch (SQLException e) {
+                return null;
+            }
+        }
+
+        int currentDay = listOfTime.get(listOfTime.size() - 1).getDayOfWeek();
+
+        double rainWeekTemp = 0;
+        for (int i = listOfTime.size() - currentDay; i < listOfTime.size(); i++) {
+            rainWeekTemp += listOfRain.get(i);
+        }
+
+        return Converter.inch_to_Millimeter(rainWeekTemp);
     }
 
     public Double getRainCurrentMonth() {

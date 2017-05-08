@@ -9,12 +9,12 @@
 package org.openhab.binding.weathervalues.internal;
 
 /**
- * The {@link SQLiteReaderListener}
+ * The {@link SQLReaderListener}
  *
  * @author Thomas Traunbauer - Initial contribution
  */
-public interface SQLiteReaderListener {
+public interface SQLReaderListener {
 
-    void getUpdate();
+    void refreshValues();
 
 }

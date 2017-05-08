@@ -16,17 +16,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.StringType;
-import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
-import org.eclipse.smarthome.core.thing.binding.ThingFactory;
-import org.eclipse.smarthome.core.thing.type.TypeResolver;
 import org.eclipse.smarthome.core.types.Command;
-import org.eclipse.smarthome.core.types.State;
+import org.openhab.binding.weathervalues.internal.SQLReaderListener;
 import org.openhab.binding.weathervalues.internal.SQLiteReader;
-import org.openhab.binding.weathervalues.internal.SQLiteReaderListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Thomas Traunbauer - Initial contribution
  */
-public class WeatherValuesHandler extends BaseThingHandler implements SQLiteReaderListener {
+public class WeatherValuesHandler extends BaseThingHandler implements SQLReaderListener {
 
     private Logger logger = LoggerFactory.getLogger(WeatherValuesHandler.class);
 
@@ -44,10 +40,6 @@ public class WeatherValuesHandler extends BaseThingHandler implements SQLiteRead
 
     public WeatherValuesHandler(Thing thing) {
         super(thing);
-    }
-
-    @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
     }
 
     /**
@@ -69,7 +61,22 @@ public class WeatherValuesHandler extends BaseThingHandler implements SQLiteRead
     }
 
     public long getRefreshInterval() {
-        return ((BigDecimal) thing.getConfiguration().get(DEVICE_PARAMETER_REFRESH)).longValue();
+        long timeInMintues = ((BigDecimal) thing.getConfiguration().get(DEVICE_PARAMETER_REFRESH)).longValue();
+        long timeInSeconds = timeInMintues * 60;
+        return timeInSeconds;
+    }
+
+    @Override
+    public void dispose() {
+        try {
+            sqliteReader.close();
+        } catch (SQLException e1) {
+        }
+        super.dispose();
+    }
+
+    @Override
+    public void handleCommand(ChannelUID channelUID, Command command) {
     }
 
     @Override
@@ -77,41 +84,32 @@ public class WeatherValuesHandler extends BaseThingHandler implements SQLiteRead
         try {
             sqliteReader = new SQLiteReader(getIPAddress(), getDBName());
             sqliteReader.addListener(this);
-            try {
-                sqliteReader.tryConnect();
-                updateStatus(ThingStatus.ONLINE);
-                scheduler.scheduleWithFixedDelay(sqliteReader, 300, getRefreshInterval(), TimeUnit.MILLISECONDS);
-            } catch (SQLException e) {
-                logger.error("Error during opening database");
-                updateStatus(ThingStatus.OFFLINE);
-                sqliteReader.removeListener(this);
-                sqliteReader = null;
-            }
+            sqliteReader.open();
+            scheduler.scheduleWithFixedDelay(sqliteReader, 1, getRefreshInterval(), TimeUnit.SECONDS);
+            updateStatus(ThingStatus.ONLINE);
         } catch (ClassNotFoundException e) {
             logger.error("Error during loading drivers for database");
+            sqliteReader.removeListener(this);
+            try {
+                sqliteReader.close();
+            } catch (SQLException e1) {
+            }
+            sqliteReader = null;
+            updateStatus(ThingStatus.OFFLINE);
+        } catch (SQLException e) {
+            logger.error("Error during opening database");
+            sqliteReader.removeListener(this);
+            try {
+                sqliteReader.close();
+            } catch (SQLException e1) {
+            }
+            sqliteReader = null;
             updateStatus(ThingStatus.OFFLINE);
         }
     }
 
-    private ChannelUID getChannelUID(String channelId) {
-        Channel channel = thing.getChannel(channelId);
-        if (channel == null) {
-            // refresh thing...
-            Thing newThing = ThingFactory.createThing(TypeResolver.resolve(thing.getThingTypeUID()), thing.getUID(),
-                    thing.getConfiguration());
-            updateThing(newThing);
-            channel = thing.getChannel(channelId);
-        }
-        return channel.getUID();
-    }
-
     @Override
-    protected void updateState(String id, State state) {
-        super.updateState(getChannelUID(id), state);
-    }
-
-    @Override
-    public void getUpdate() {
+    public void refreshValues() {
         if (sqliteReader.getBarometer() != null) {
             updateState(CHANNEL_BAROMETER, new DecimalType(sqliteReader.getBarometer()));
         }
