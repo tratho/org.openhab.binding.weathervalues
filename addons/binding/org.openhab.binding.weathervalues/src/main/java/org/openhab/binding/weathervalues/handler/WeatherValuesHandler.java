@@ -14,8 +14,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.smarthome.core.library.types.DecimalType;
-import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -110,88 +108,32 @@ public class WeatherValuesHandler extends BaseThingHandler implements SQLReaderL
 
     @Override
     public void refreshValues() {
-        if (sqliteReader.getBarometer() != null) {
-            updateState(CHANNEL_BAROMETER, new DecimalType(sqliteReader.getBarometer()));
-        }
-        if (sqliteReader.getOutdoorTemperature() != null) {
-            updateState(CHANNEL_OUTSIDE_TEMPERATURE, new DecimalType(sqliteReader.getOutdoorTemperature()));
-        }
-        if (sqliteReader.getOutdoorTemperatureCurrentDayMin() != null) {
-            updateState(CHANNEL_OUTSIDE_TEMPERATURE_DAY_MIN,
-                    new DecimalType(sqliteReader.getOutdoorTemperatureCurrentDayMin()));
-        }
-        if (sqliteReader.getOutdoorTemperatureCurrentDayMinTime() != null) {
-            updateState(CHANNEL_OUTSIDE_TEMPERATURE_DAY_MIN_TIME,
-                    sqliteReader.getOutdoorTemperatureCurrentDayMinTime());
-        }
-        if (sqliteReader.getOutdoorTemperatureCurrentDayMax() != null) {
-            updateState(CHANNEL_OUTSIDE_TEMPERATURE_DAY_MAX,
-                    new DecimalType(sqliteReader.getOutdoorTemperatureCurrentDayMax()));
-        }
-        if (sqliteReader.getOutdoorTemperatureCurrentDayMaxTime() != null) {
-            updateState(CHANNEL_OUTSIDE_TEMPERATURE_DAY_MAX_TIME,
-                    sqliteReader.getOutdoorTemperatureCurrentDayMaxTime());
-        }
-        if (sqliteReader.getOutdoorHumidity() != null) {
-            updateState(CHANNEL_OUTSIDE_HUMIDITY, new DecimalType(sqliteReader.getOutdoorHumidity()));
-        }
-        if (sqliteReader.getWindSpeed() != null) {
-            updateState(CHANNEL_WIND_SPEED, new DecimalType(sqliteReader.getWindSpeed()));
-        }
-        if (sqliteReader.getWindDirection() != null) {
-            updateState(CHANNEL_WIND_DIRECTION, new StringType(sqliteReader.getWindDirection().toString()));
-        }
-        if (sqliteReader.getRainRate() != null) {
-            updateState(CHANNEL_RAIN_RATE, new DecimalType(sqliteReader.getRainRate()));
-        }
-        if (sqliteReader.getRainCurrentDay() != null) {
-            updateState(CHANNEL_RAIN_CURRENT_DAY, new DecimalType(sqliteReader.getRainCurrentDay()));
-        }
-        if (sqliteReader.getRainCurrentWeek() != null) {
-            updateState(CHANNEL_RAIN_CURRENT_WEEK, new DecimalType(sqliteReader.getRainCurrentWeek()));
-        }
-        if (sqliteReader.getRainCurrentMonth() != null) {
-            updateState(CHANNEL_RAIN_CURRENT_MONTH, new DecimalType(sqliteReader.getRainCurrentMonth()));
-        }
-        if (sqliteReader.getRainCurrentYear() != null) {
-            updateState(CHANNEL_RAIN_CURRENT_YEAR, new DecimalType(sqliteReader.getRainCurrentYear()));
-        }
-        if (sqliteReader.getRainJanuary() != null) {
-            updateState(CHANNEL_RAIN_MONTH1, new DecimalType(sqliteReader.getRainJanuary()));
-        }
-        if (sqliteReader.getRainFebruary() != null) {
-            updateState(CHANNEL_RAIN_MONTH2, new DecimalType(sqliteReader.getRainFebruary()));
-        }
-        if (sqliteReader.getRainMarch() != null) {
-            updateState(CHANNEL_RAIN_MONTH3, new DecimalType(sqliteReader.getRainMarch()));
-        }
-        if (sqliteReader.getRainApril() != null) {
-            updateState(CHANNEL_RAIN_MONTH4, new DecimalType(sqliteReader.getRainApril()));
-        }
-        if (sqliteReader.getRainMay() != null) {
-            updateState(CHANNEL_RAIN_MONTH5, new DecimalType(sqliteReader.getRainMay()));
-        }
-        if (sqliteReader.getRainJune() != null) {
-            updateState(CHANNEL_RAIN_MONTH6, new DecimalType(sqliteReader.getRainJune()));
-        }
-        if (sqliteReader.getRainJuly() != null) {
-            updateState(CHANNEL_RAIN_MONTH7, new DecimalType(sqliteReader.getRainJuly()));
-        }
-        if (sqliteReader.getRainAugust() != null) {
-            updateState(CHANNEL_RAIN_MONTH8, new DecimalType(sqliteReader.getRainAugust()));
-        }
-        if (sqliteReader.getRainSeptember() != null) {
-            updateState(CHANNEL_RAIN_MONTH9, new DecimalType(sqliteReader.getRainSeptember()));
-        }
-        if (sqliteReader.getRainOctober() != null) {
-            updateState(CHANNEL_RAIN_MONTH10, new DecimalType(sqliteReader.getRainOctober()));
-        }
-        if (sqliteReader.getRainNovember() != null) {
-            updateState(CHANNEL_RAIN_MONTH11, new DecimalType(sqliteReader.getRainNovember()));
-        }
-        if (sqliteReader.getRainDecember() != null) {
-            updateState(CHANNEL_RAIN_MONTH12, new DecimalType(sqliteReader.getRainDecember()));
-        }
+        updateState(CHANNEL_BAROMETER, sqliteReader.getBarometer());
+        updateState(CHANNEL_OUTSIDE_TEMPERATURE, sqliteReader.getOutdoorTemperature());
+        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MIN, sqliteReader.getOutdoorTemperatureCurrentDayMin());
+        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MIN_TIME, sqliteReader.getOutdoorTemperatureCurrentDayMinTime());
+        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MAX, sqliteReader.getOutdoorTemperatureCurrentDayMax());
+        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MAX_TIME, sqliteReader.getOutdoorTemperatureCurrentDayMaxTime());
+        updateState(CHANNEL_OUTSIDE_HUMIDITY, sqliteReader.getOutdoorHumidity());
+        updateState(CHANNEL_WIND_SPEED, sqliteReader.getWindSpeed());
+        updateState(CHANNEL_WIND_DIRECTION, sqliteReader.getWindDirection());
+        updateState(CHANNEL_RAIN_RATE, sqliteReader.getRainRate());
+        updateState(CHANNEL_RAIN_CURRENT_DAY, sqliteReader.getRainCurrentDay());
+        updateState(CHANNEL_RAIN_CURRENT_WEEK, sqliteReader.getRainCurrentWeek());
+        updateState(CHANNEL_RAIN_CURRENT_MONTH, sqliteReader.getRainCurrentMonth());
+        updateState(CHANNEL_RAIN_CURRENT_YEAR, sqliteReader.getRainCurrentYear());
+        updateState(CHANNEL_RAIN_MONTH1, sqliteReader.getRainMonth(1));
+        updateState(CHANNEL_RAIN_MONTH2, sqliteReader.getRainMonth(2));
+        updateState(CHANNEL_RAIN_MONTH3, sqliteReader.getRainMonth(3));
+        updateState(CHANNEL_RAIN_MONTH4, sqliteReader.getRainMonth(4));
+        updateState(CHANNEL_RAIN_MONTH5, sqliteReader.getRainMonth(5));
+        updateState(CHANNEL_RAIN_MONTH6, sqliteReader.getRainMonth(6));
+        updateState(CHANNEL_RAIN_MONTH7, sqliteReader.getRainMonth(7));
+        updateState(CHANNEL_RAIN_MONTH8, sqliteReader.getRainMonth(8));
+        updateState(CHANNEL_RAIN_MONTH9, sqliteReader.getRainMonth(9));
+        updateState(CHANNEL_RAIN_MONTH10, sqliteReader.getRainMonth(10));
+        updateState(CHANNEL_RAIN_MONTH11, sqliteReader.getRainMonth(11));
+        updateState(CHANNEL_RAIN_MONTH12, sqliteReader.getRainMonth(12));
     }
 
 }

@@ -30,10 +30,10 @@ public class WeatherValuesBindingConstants {
     // List of all Channel ids
     public final static String CHANNEL_BAROMETER = "barometer";
     public final static String CHANNEL_OUTSIDE_TEMPERATURE = "outsideTemperature";
-    public final static String CHANNEL_OUTSIDE_TEMPERATURE_DAY_MIN = "outsideTemperatureDayMin";
-    public final static String CHANNEL_OUTSIDE_TEMPERATURE_DAY_MIN_TIME = "outsideTemperatureDayMinTime";
-    public final static String CHANNEL_OUTSIDE_TEMPERATURE_DAY_MAX = "outsideTemperatureDayMax";
-    public final static String CHANNEL_OUTSIDE_TEMPERATURE_DAY_MAX_TIME = "outsideTemperatureDayMaxTime";
+    public final static String CHANNEL_OUTSIDE_TEMP_DAY_MIN = "outsideTemperatureDayMin";
+    public final static String CHANNEL_OUTSIDE_TEMP_DAY_MIN_TIME = "outsideTemperatureDayMinTime";
+    public final static String CHANNEL_OUTSIDE_TEMP_DAY_MAX = "outsideTemperatureDayMax";
+    public final static String CHANNEL_OUTSIDE_TEMP_DAY_MAX_TIME = "outsideTemperatureDayMaxTime";
     public final static String CHANNEL_OUTSIDE_HUMIDITY = "outsideHumidity";
     public final static String CHANNEL_WIND_SPEED = "windSpeed";
     public final static String CHANNEL_WIND_DIRECTION = "windDirection";

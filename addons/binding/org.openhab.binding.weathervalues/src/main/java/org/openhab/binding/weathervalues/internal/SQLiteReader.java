@@ -15,7 +15,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.smarthome.core.library.types.DateTimeType;
+import org.eclipse.smarthome.core.library.types.DecimalType;
+import org.eclipse.smarthome.core.library.types.StringType;
+import org.eclipse.smarthome.core.types.State;
+import org.eclipse.smarthome.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,20 +52,24 @@ public class SQLiteReader implements Runnable, SQLReader {
     private Time outTempDayMaxTime;
     private Double rainCurrentDay;
 
+    // week
+    private Double rainWeekInMM;
+
     // month
-    private List<Double> listOfRainMonth;
+    private List<State> listOfRainMonthInMM;
 
     // Rain Data
     private List<Time> listOfTime;
-    private List<Double> listOfRain;
+    private List<Double> listOfRainInMM;
 
     public SQLiteReader(String host, String dbName) throws ClassNotFoundException {
         this.host = host;
         this.dbName = dbName;
         this.listOfListener = new ArrayList<>();
         this.listOfTime = new ArrayList<>();
-        this.listOfRain = new ArrayList<>();
-        this.listOfRainMonth = new ArrayList<>();
+        this.listOfRainInMM = new ArrayList<>();
+        this.listOfRainMonthInMM = new ArrayList<>();
+        this.rainWeekInMM = null;
 
         Class.forName("org.sqlite.JDBC");
     }
@@ -85,7 +92,7 @@ public class SQLiteReader implements Runnable, SQLReader {
             logger.warn("Error during reading values form database");
         }
         try {
-            pullMonthRain();
+            pullRainData();
         } catch (SQLException e) {
             logger.warn("Error during reading values form database");
         }
@@ -227,181 +234,174 @@ public class SQLiteReader implements Runnable, SQLReader {
         resultSet.close();
     }
 
-    private void pullMonthRain() throws SQLException {
+    private void pullRainData() throws SQLException {
         if (listOfTime.size() == 0) {
-            pullRainData();
+            String sql = "SELECT dateTime, sum FROM archive_day_rain ORDER BY dateTime";
+            ResultSet resultSet = getResultSet(sql);
+
+            while (resultSet.next()) {
+                String sTimeInSeconds = resultSet.getString("dateTime");
+                String sRain = resultSet.getString("sum");
+
+                try {
+                    listOfTime.add(0, Converter.seconds_to_Time(Long.parseLong(sTimeInSeconds)));
+                } catch (NumberFormatException e) {
+                }
+                try {
+                    listOfRainInMM.add(0, Converter.inch_to_Millimeter(Double.parseDouble(sRain)));
+                } catch (NumberFormatException e) {
+                    if (listOfTime.size() != listOfRainInMM.size()) {
+                        listOfTime.remove(0);
+                    }
+                }
+            }
+
+            resultSet.close();
         }
 
-        listOfRainMonth.clear();
+        int currentDay = listOfTime.get(0).getDayOfWeek();
+
+        rainWeekInMM = 0.0;
+        for (int i = 0; i < currentDay; i++) {
+            rainWeekInMM += listOfRainInMM.get(i);
+        }
+
+        listOfRainMonthInMM.clear();
 
         for (int month = 1; month <= 12; month++) {
             double rainMonthTemp = 0;
             for (int i = 0; i < listOfTime.size(); i++) {
                 if (listOfTime.get(i).getYear() == new Time().getYear()) {
                     if (listOfTime.get(i).getMonth() == month) {
-                        rainMonthTemp = rainMonthTemp + listOfRain.get(i);
+                        rainMonthTemp += listOfRainInMM.get(i);
                     }
                 }
             }
-            listOfRainMonth.add(Converter.inch_to_Millimeter(rainMonthTemp));
+            if (month > new Time().getMonth()) {
+                listOfRainMonthInMM.add(UnDefType.NULL);
+            } else {
+                listOfRainMonthInMM.add(new DecimalType(rainMonthTemp));
+            }
+        }
+    }
+
+    public State getBarometer() {
+        if (barometer != null) {
+            return new DecimalType(barometer);
+        }
+        return UnDefType.NULL;
+    }
+
+    public State getOutdoorHumidity() {
+        if (outHumidity != null) {
+            return new DecimalType(outHumidity);
+        }
+        return UnDefType.NULL;
+    }
+
+    public State getOutdoorTemperature() {
+        if (outTemp != null) {
+            return new DecimalType(outTemp);
+        }
+        return UnDefType.NULL;
+    }
+
+    public State getWindSpeed() {
+        if (windSpeed != null) {
+            return new DecimalType(windSpeed);
+        }
+        return UnDefType.NULL;
+    }
+
+    public State getWindDirection() {
+        switch (windDir) {
+            case Unknown:
+                return UnDefType.NULL;
+            default:
+                return new StringType(windDir.toString());
         }
     }
 
-    private void pullRainData() throws SQLException {
-        listOfTime.clear();
-        listOfRain.clear();
-
-        String sql = "SELECT dateTime, sum FROM archive_day_rain ORDER BY dateTime";
-        ResultSet resultSet = getResultSet(sql);
-
-        while (resultSet.next()) {
-            String sTimeInSeconds = resultSet.getString("dateTime");
-            String sRain = resultSet.getString("sum");
-
-            try {
-                listOfTime.add(0, Converter.seconds_to_Time(Long.parseLong(sTimeInSeconds)));
-            } catch (NumberFormatException e) {
-            }
-            try {
-                listOfRain.add(0, Double.parseDouble(sRain));
-            } catch (NumberFormatException e) {
-                if (listOfTime.size() != listOfRain.size()) {
-                    listOfTime.remove(0);
-                }
-            }
+    public State getRainRate() {
+        if (rainRate != null) {
+            return new DecimalType(rainRate);
         }
-
-        resultSet.close();
+        return UnDefType.NULL;
     }
 
-    public Double getBarometer() {
-        return barometer;
+    public State getOutdoorTemperatureCurrentDayMin() {
+        if (outTempDayMin != null) {
+            return new DecimalType(outTempDayMin);
+        }
+        return UnDefType.NULL;
     }
 
-    public Double getOutdoorHumidity() {
-        return outHumidity;
+    public State getOutdoorTemperatureCurrentDayMinTime() {
+        if (outTempDayMinTime != null) {
+            return outTempDayMinTime.getDateTimeType();
+        }
+        return UnDefType.NULL;
     }
 
-    public Double getOutdoorTemperature() {
-        return outTemp;
+    public State getOutdoorTemperatureCurrentDayMax() {
+        if (outTempDayMax != null) {
+            return new DecimalType(outTempDayMax);
+        }
+        return UnDefType.NULL;
     }
 
-    public Double getWindSpeed() {
-        return windSpeed;
+    public State getOutdoorTemperatureCurrentDayMaxTime() {
+        if (outTempDayMaxTime != null) {
+            return outTempDayMaxTime.getDateTimeType();
+        }
+        return UnDefType.NULL;
     }
 
-    public WindDirection getWindDirection() {
-        return windDir;
+    public State getRainCurrentDay() {
+        if (rainCurrentDay != null) {
+            return new DecimalType(rainCurrentDay);
+        }
+        return UnDefType.NULL;
     }
 
-    public Double getRainRate() {
-        return rainRate;
+    public State getRainCurrentWeek() {
+        if (rainWeekInMM != null) {
+            return new DecimalType(rainWeekInMM);
+        }
+        return UnDefType.NULL;
     }
 
-    public Double getOutdoorTemperatureCurrentDayMin() {
-        return outTempDayMin;
+    public State getRainCurrentMonth() {
+        return listOfRainMonthInMM.get(new Time().getMonth() - 1);
     }
 
-    public DateTimeType getOutdoorTemperatureCurrentDayMinTime() {
-        return outTempDayMinTime.getDateTimeType();
-    }
-
-    public Double getOutdoorTemperatureCurrentDayMax() {
-        return outTempDayMax;
-    }
-
-    public DateTimeType getOutdoorTemperatureCurrentDayMaxTime() {
-        return outTempDayMaxTime.getDateTimeType();
-    }
-
-    public Double getRainCurrentDay() {
-        return rainCurrentDay;
-    }
-
-    public Double getRainCurrentWeek() {
-        if (listOfRainMonth.size() == 0) {
+    public State getRainCurrentYear() {
+        if (listOfRainMonthInMM.size() == 0) {
             try {
-                pullMonthRain();
+                pullRainData();
             } catch (SQLException e) {
-                return null;
+                return UnDefType.NULL;
             }
         }
 
-        int currentDay = listOfTime.get(listOfTime.size() - 1).getDayOfWeek();
-
-        double rainWeekTemp = 0;
-        for (int i = listOfTime.size() - currentDay; i < listOfTime.size(); i++) {
-            rainWeekTemp += listOfRain.get(i);
-        }
-
-        return Converter.inch_to_Millimeter(rainWeekTemp);
-    }
-
-    public Double getRainCurrentMonth() {
-        return listOfRainMonth.get(new Time().getMonth() - 1);
-    }
-
-    public Double getRainCurrentYear() {
-        if (listOfRainMonth.size() == 0) {
-            try {
-                pullMonthRain();
-            } catch (SQLException e) {
-                return null;
-            }
-        }
+        boolean checker = false;
 
         double rainCurrentYear = 0.0;
         for (int month = 0; month < 12; month++) {
-            rainCurrentYear += listOfRainMonth.get(month);
+            State currentMonth = listOfRainMonthInMM.get(month);
+            if (currentMonth instanceof DecimalType) {
+                rainCurrentYear += ((DecimalType) listOfRainMonthInMM.get(month)).doubleValue();
+                checker = true;
+            }
         }
-        return rainCurrentYear;
+        if (checker) {
+            return new DecimalType(rainCurrentYear);
+        } else {
+            return UnDefType.NULL;
+        }
     }
 
-    public Double getRainJanuary() {
-        return listOfRainMonth.get(0);
-    }
-
-    public Double getRainFebruary() {
-        return listOfRainMonth.get(1);
-    }
-
-    public Double getRainMarch() {
-        return listOfRainMonth.get(2);
-    }
-
-    public Double getRainApril() {
-        return listOfRainMonth.get(3);
-    }
-
-    public Double getRainMay() {
-        return listOfRainMonth.get(4);
-    }
-
-    public Double getRainJune() {
-        return listOfRainMonth.get(5);
-    }
-
-    public Double getRainJuly() {
-        return listOfRainMonth.get(6);
-    }
-
-    public Double getRainAugust() {
-        return listOfRainMonth.get(7);
-    }
-
-    public Double getRainSeptember() {
-        return listOfRainMonth.get(8);
-    }
-
-    public Double getRainOctober() {
-        return listOfRainMonth.get(9);
-    }
-
-    public Double getRainNovember() {
-        return listOfRainMonth.get(10);
-    }
-
-    public Double getRainDecember() {
-        return listOfRainMonth.get(11);
+    public State getRainMonth(int month) {
+        return listOfRainMonthInMM.get(month - 1);
     }
 }

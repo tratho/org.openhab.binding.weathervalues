@@ -74,14 +74,10 @@ public class Time {
         return day;
     }
 
-    public Calendar getCalendar() {
+    public DateTimeType getDateTimeType() {
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(timeInMilliseconds);
-        return date;
-    }
-
-    public DateTimeType getDateTimeType() {
-        return new DateTimeType(getCalendar());
+        return new DateTimeType(date);
     }
 
     @Override
