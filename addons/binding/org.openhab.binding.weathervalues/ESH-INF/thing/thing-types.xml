@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="weathervalues"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
+        xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
+
+    <thing-type id="device">
+        <label>WeatherValues Binding</label>
+        <description>Represents a WeatherValues</description>
+
+        <channels>
+            <channel id="barometer" typeId="barometer"/>
+            
+            <channel id="outsideTemperature" typeId="outsideTemperature"/>
+            <channel id="outsideTemperatureDayMin" typeId="outsideTemperatureDayMin"/>
+            <channel id="outsideTemperatureDayMinTime" typeId="outsideTemperatureDayMinTime" />
+            <channel id="outsideTemperatureDayMax" typeId="outsideTemperatureDayMax"/>
+            <channel id="outsideTemperatureDayMaxTime" typeId="outsideTemperatureDayMaxTime" />
+            
+            <channel id="outsideHumidity" typeId="outsideHumidity"/>
+            <channel id="windSpeed" typeId="windSpeed"/>
+            <channel id="windDirection" typeId="windDirection"/>
+            <channel id="rainRate" typeId="rainRate"/>
+            
+            <channel id="rainCurrentDay" typeId="rainCurrentDay"/>
+            <channel id="rainCurrentWeek" typeId="rainCurrentWeek"/>
+            <channel id="rainCurrentMonth" typeId="rainCurrentMonth"/>
+            <channel id="rainCurrentYear" typeId="rainCurrentYear"/>
+            
+            <channel id="rainJanuary" typeId="rainMonth"/>
+            <channel id="rainFebruary" typeId="rainMonth"/>
+            <channel id="rainMarch" typeId="rainMonth"/>
+            <channel id="rainApril" typeId="rainMonth"/>
+            <channel id="rainMay" typeId="rainMonth"/>
+            <channel id="rainJune" typeId="rainMonth"/>
+            <channel id="rainJuly" typeId="rainMonth"/>
+            <channel id="rainAugust" typeId="rainMonth"/>
+            <channel id="rainSeptember" typeId="rainMonth"/>
+            <channel id="rainOctober" typeId="rainMonth"/>
+            <channel id="rainNovember" typeId="rainMonth"/>
+            <channel id="rainDecember" typeId="rainMonth"/>
+        </channels>
+        <config-description>
+            <parameter name="DEVICE_HOST" type="text" required="true">
+                <label>Host Address</label>
+                <description>The Host / IP Address used for communication to this device</description>
+            </parameter>
+            <parameter name="DEVICE_DB_NAME" type="text" required="true">
+                <label>Database Name</label>
+                <description>The name of sql database</description>
+            </parameter>
+            <parameter name="REFRESH_INTERVAL" type="integer" required="true">
+                <label>Refresh interval</label>
+                <description>Time for autoupdate</description>
+            </parameter>
+        </config-description>
+    </thing-type>
+    
+    <channel-type id="barometer">
+        <item-type>Number</item-type>
+        <label>Barometer</label>
+        <description>Channel for the Barometer</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="outsideTemperature">
+        <item-type>Number</item-type>
+        <label>Outside Temperature</label>
+        <description>Channel for the Outside Temperature</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="outsideTemperatureDayMin">
+        <item-type>Number</item-type>
+        <label>Outside Temperature Day Min</label>
+        <description>Channel for the minimal Outside Temperature of current Day</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="outsideTemperatureDayMinTime">
+        <item-type>DateTime</item-type>
+        <label>Outside Temperature Day Min Time</label>
+        <description>Channel for the minimal Outside Temperature of current Day Time</description>
+        <state readOnly="true" pattern="%1$tF %1$tR" />
+    </channel-type>
+    <channel-type id="outsideTemperatureDayMax">
+        <item-type>Number</item-type>
+        <label>Outside TemperatureDay Max</label>
+        <description>Channel for the maximal Outside Temperature of current Day</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="outsideTemperatureDayMaxTime">
+        <item-type>DateTime</item-type>
+        <label>Outside Temperature Day Max Time</label>
+        <description>Channel for the maximal Outside Temperature of current Day Time</description>
+        <state readOnly="true" pattern="%1$tF %1$tR" />
+    </channel-type>
+    <channel-type id="outsideHumidity">
+        <item-type>Number</item-type>
+        <label>Outside Humidity</label>
+        <description>Channel for the Outside Humidity</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="windSpeed">
+        <item-type>Number</item-type>
+        <label>Wind Speed</label>
+        <description>Channel for the Wind Speed</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="windDirection">
+        <item-type>String</item-type>
+        <label>Wind Direction</label>
+        <description>Channel for the Wind Direction</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="rainRate">
+        <item-type>Number</item-type>
+        <label>Rain Rate</label>
+        <description>Channel for the Rain Rate</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="rainCurrentDay">
+        <item-type>Number</item-type>
+        <label>Rain Day</label>
+        <description>Channel for the Rain the last 24 hours</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="rainCurrentWeek">
+        <item-type>Number</item-type>
+        <label>Rain Week</label>
+        <description>Channel for the Rain for the current week starting with Monday</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="rainCurrentMonth">
+        <item-type>Number</item-type>
+        <label>Rain Month</label>
+        <description>Channel for the Rain for the current month</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="rainCurrentYear">
+        <item-type>Number</item-type>
+        <label>Rain Year</label>
+        <description>Channel for the Rain for the current year</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="rainMonth">
+        <item-type>Number</item-type>
+        <label>Rain Month</label>
+        <description>Channel for the Rain for the month</description>
+        <state readOnly="true"/>
+    </channel-type>
+</thing:thing-descriptions>
