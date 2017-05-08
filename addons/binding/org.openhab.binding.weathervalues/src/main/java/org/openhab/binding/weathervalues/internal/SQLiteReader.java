@@ -20,6 +20,11 @@ import org.eclipse.smarthome.core.library.types.DateTimeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The {@link SQLiteReader}
+ *
+ * @author Thomas Traunbauer - Initial contribution
+ */
 public class SQLiteReader implements Runnable {
 
     private Logger logger = LoggerFactory.getLogger(SQLiteReader.class);

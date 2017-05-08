@@ -54,5 +54,4 @@ public class WeatherValuesBindingConstants {
     public final static String CHANNEL_RAIN_MONTH10 = "rainOctober";
     public final static String CHANNEL_RAIN_MONTH11 = "rainNovember";
     public final static String CHANNEL_RAIN_MONTH12 = "rainDecember";
-
 }

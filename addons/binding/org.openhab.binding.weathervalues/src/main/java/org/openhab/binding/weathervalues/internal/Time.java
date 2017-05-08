@@ -12,6 +12,11 @@ import java.util.Calendar;
 
 import org.eclipse.smarthome.core.library.types.DateTimeType;
 
+/**
+ * The {@link Time}
+ *
+ * @author Thomas Traunbauer - Initial contribution
+ */
 public class Time {
     private long timeInMilliseconds;
 

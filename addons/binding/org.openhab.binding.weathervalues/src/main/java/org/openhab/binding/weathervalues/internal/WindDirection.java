@@ -8,6 +8,11 @@
  */
 package org.openhab.binding.weathervalues.internal;
 
+/**
+ * The {@link WindDirection}
+ *
+ * @author Thomas Traunbauer - Initial contribution
+ */
 public enum WindDirection {
     North,
     NorthEast,

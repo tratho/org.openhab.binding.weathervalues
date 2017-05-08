@@ -8,6 +8,11 @@
  */
 package org.openhab.binding.weathervalues.internal;
 
+/**
+ * The {@link Converter}
+ *
+ * @author Thomas Traunbauer - Initial contribution
+ */
 public class Converter {
 
     public static double inchOfHG_to_Millibar(double value) {
@@ -73,10 +78,4 @@ public class Converter {
     public static long hour_to_Milliseconds(int value) {
         return value * 60 * 60 * 1000;
     }
-
-    public static void main(String[] args) {
-        System.out.println(seconds_to_Time(1481037311));
-        System.out.println(seconds_to_Time(1474495200));
-    }
-
 }
