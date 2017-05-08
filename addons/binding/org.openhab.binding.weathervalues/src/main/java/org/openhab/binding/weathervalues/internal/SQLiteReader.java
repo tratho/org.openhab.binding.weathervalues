@@ -17,15 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.smarthome.core.library.types.DateTimeType;
-import org.eclipse.smarthome.core.thing.Thing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SQLiteReader implements Runnable {
 
     private Logger logger = LoggerFactory.getLogger(SQLiteReader.class);
-
-    private Thing thing;
 
     private Connection connection;
     private List<SQLiteReaderListener> listOfListener;
@@ -69,10 +66,6 @@ public class SQLiteReader implements Runnable {
         Class.forName("org.sqlite.JDBC");
     }
 
-    public void setThing(Thing thing) {
-        this.thing = thing;
-    }
-
     public void open() throws SQLException {
         // host = 192.168.0.108
         // dbName = weewx.db
@@ -99,7 +92,7 @@ public class SQLiteReader implements Runnable {
             pullWeekRain();
             pullMonthRain();
         } catch (SQLException e) {
-            logger.error(thing + ": Error during operation on database ", e);
+            logger.error("Error during operation on database ", e);
         }
         callAllListener();
     }
@@ -142,7 +135,7 @@ public class SQLiteReader implements Runnable {
             rainRate = null;
         }
         if (sWindDir != null) {
-            windDir = Converter.grad_to_windDir((int) Double.parseDouble(sWindDir));
+            windDir = Converter.grad_to_windDirection((int) Double.parseDouble(sWindDir));
         } else {
             windDir = WindDirection.Unknown;
         }

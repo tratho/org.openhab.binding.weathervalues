@@ -34,7 +34,7 @@ public class Converter {
         return value * 0.514444;
     }
 
-    public static WindDirection grad_to_windDir(double value) {
+    public static WindDirection grad_to_windDirection(double value) {
         WindDirection windDir;
 
         if (value == 360) {

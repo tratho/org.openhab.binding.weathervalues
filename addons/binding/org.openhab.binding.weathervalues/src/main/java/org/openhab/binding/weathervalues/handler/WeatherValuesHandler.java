@@ -77,19 +77,18 @@ public class WeatherValuesHandler extends BaseThingHandler implements SQLiteRead
         try {
             sqliteReader = new SQLiteReader(getIPAddress(), getDBName());
             sqliteReader.addListener(this);
-            sqliteReader.setThing(thing);
             try {
                 sqliteReader.tryConnect();
                 updateStatus(ThingStatus.ONLINE);
                 scheduler.scheduleWithFixedDelay(sqliteReader, 300, getRefreshInterval(), TimeUnit.MILLISECONDS);
             } catch (SQLException e) {
-                logger.error(thing + ": Error during opening database");
+                logger.error("Error during opening database");
                 updateStatus(ThingStatus.OFFLINE);
                 sqliteReader.removeListener(this);
                 sqliteReader = null;
             }
         } catch (ClassNotFoundException e) {
-            logger.error(thing + ": Error during loading drivers for database");
+            logger.error("Error during loading drivers for database");
             updateStatus(ThingStatus.OFFLINE);
         }
     }
