@@ -59,15 +59,10 @@ public class SQLiteReader implements Runnable, SQLReader {
     private List<State> listOfRainMonthInMM;
 
     // Rain Data
-    private List<Time> listOfTime;
-    private List<Double> listOfRainInMM;
-
     public SQLiteReader(String host, String dbName) throws ClassNotFoundException {
         this.host = host;
         this.dbName = dbName;
         this.listOfListener = new ArrayList<>();
-        this.listOfTime = new ArrayList<>();
-        this.listOfRainInMM = new ArrayList<>();
         this.listOfRainMonthInMM = new ArrayList<>();
         this.rainWeekInMM = null;
 
@@ -231,8 +226,8 @@ public class SQLiteReader implements Runnable, SQLReader {
     }
 
     private void pullRainData() throws SQLException {
-        listOfTime.clear();
-        listOfRainInMM.clear();
+        List<Time> listOfTime = new ArrayList<>();
+        List<Double> listOfRain = new ArrayList<>();
 
         String sql = "SELECT dateTime, sum FROM archive_day_rain ORDER BY dateTime";
         ResultSet resultSet = getResultSet(sql);
@@ -246,9 +241,9 @@ public class SQLiteReader implements Runnable, SQLReader {
             } catch (NumberFormatException e) {
             }
             try {
-                listOfRainInMM.add(0, Converter.inch_to_Millimeter(Double.parseDouble(sRain)));
+                listOfRain.add(0, Converter.inch_to_Millimeter(Double.parseDouble(sRain)));
             } catch (NumberFormatException e) {
-                if (listOfTime.size() != listOfRainInMM.size()) {
+                if (listOfTime.size() != listOfRain.size()) {
                     listOfTime.remove(0);
                 }
             }
@@ -260,7 +255,7 @@ public class SQLiteReader implements Runnable, SQLReader {
 
         rainWeekInMM = 0.0;
         for (int i = 0; i < currentDay; i++) {
-            rainWeekInMM += listOfRainInMM.get(i);
+            rainWeekInMM += listOfRain.get(i);
         }
 
         listOfRainMonthInMM.clear();
@@ -270,7 +265,7 @@ public class SQLiteReader implements Runnable, SQLReader {
             for (int i = 0; i < listOfTime.size(); i++) {
                 if (listOfTime.get(i).getYear() == new Time().getYear()) {
                     if (listOfTime.get(i).getMonth() == month) {
-                        rainMonthTemp += listOfRainInMM.get(i);
+                        rainMonthTemp += listOfRain.get(i);
                     }
                 }
             }
