@@ -76,37 +76,7 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     @Override
     public void run() {
-        try {
-            pullCurrent();
-        } catch (SQLException e) {
-            logger.warn("Error during reading values form database");
-        }
-        try {
-            pullDay();
-        } catch (SQLException e) {
-            logger.warn("Error during reading values form database");
-        }
-        try {
-            pullDayRain();
-        } catch (SQLException e) {
-            logger.warn("Error during reading values form database");
-        }
-        try {
-            pullRainData();
-        } catch (SQLException e) {
-            logger.warn("Error during reading values form database");
-        }
         callAllListener();
-    }
-
-    @Override
-    public void open() throws SQLException {
-        connection = DriverManager.getConnection("jdbc:sqlite::resource:http://" + host + "/" + dbName);
-    }
-
-    @Override
-    public void close() throws SQLException {
-        connection.close();
     }
 
     @Override
@@ -131,8 +101,34 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     @Override
     public void callAllListener() {
-        for (SQLReaderListener listener : listOfListener) {
-            listener.refreshValues();
+        try {
+            open();
+            try {
+                pullCurrent();
+            } catch (SQLException e) {
+                logger.warn("Error during reading values form database");
+            }
+            try {
+                pullDay();
+            } catch (SQLException e) {
+                logger.warn("Error during reading values form database");
+            }
+            try {
+                pullDayRain();
+            } catch (SQLException e) {
+                logger.warn("Error during reading values form database");
+            }
+            try {
+                pullRainData();
+            } catch (SQLException e) {
+                logger.warn("Error during reading values form database");
+            }
+            close();
+            for (SQLReaderListener listener : listOfListener) {
+                listener.refreshValues();
+            }
+        } catch (SQLException e) {
+            logger.warn("Error during opening/closing database");
         }
     }
 
@@ -235,29 +231,30 @@ public class SQLiteReader implements Runnable, SQLReader {
     }
 
     private void pullRainData() throws SQLException {
-        if (listOfTime.size() == 0) {
-            String sql = "SELECT dateTime, sum FROM archive_day_rain ORDER BY dateTime";
-            ResultSet resultSet = getResultSet(sql);
+        listOfTime.clear();
+        listOfRainInMM.clear();
 
-            while (resultSet.next()) {
-                String sTimeInSeconds = resultSet.getString("dateTime");
-                String sRain = resultSet.getString("sum");
+        String sql = "SELECT dateTime, sum FROM archive_day_rain ORDER BY dateTime";
+        ResultSet resultSet = getResultSet(sql);
 
-                try {
-                    listOfTime.add(0, Converter.seconds_to_Time(Long.parseLong(sTimeInSeconds)));
-                } catch (NumberFormatException e) {
-                }
-                try {
-                    listOfRainInMM.add(0, Converter.inch_to_Millimeter(Double.parseDouble(sRain)));
-                } catch (NumberFormatException e) {
-                    if (listOfTime.size() != listOfRainInMM.size()) {
-                        listOfTime.remove(0);
-                    }
+        while (resultSet.next()) {
+            String sTimeInSeconds = resultSet.getString("dateTime");
+            String sRain = resultSet.getString("sum");
+
+            try {
+                listOfTime.add(0, Converter.seconds_to_Time(Long.parseLong(sTimeInSeconds)));
+            } catch (NumberFormatException e) {
+            }
+            try {
+                listOfRainInMM.add(0, Converter.inch_to_Millimeter(Double.parseDouble(sRain)));
+            } catch (NumberFormatException e) {
+                if (listOfTime.size() != listOfRainInMM.size()) {
+                    listOfTime.remove(0);
                 }
             }
-
-            resultSet.close();
         }
+
+        resultSet.close();
 
         int currentDay = listOfTime.get(0).getDayOfWeek();
 
@@ -283,6 +280,14 @@ public class SQLiteReader implements Runnable, SQLReader {
                 listOfRainMonthInMM.add(new DecimalType(rainMonthTemp));
             }
         }
+    }
+
+    private void open() throws SQLException {
+        connection = DriverManager.getConnection("jdbc:sqlite::resource:http://" + host + "/" + dbName);
+    }
+
+    private void close() throws SQLException {
+        connection.close();
     }
 
     public State getBarometer() {

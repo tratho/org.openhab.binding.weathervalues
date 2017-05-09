@@ -11,7 +11,6 @@ package org.openhab.binding.weathervalues.handler;
 import static org.openhab.binding.weathervalues.WeatherValuesBindingConstants.*;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -65,15 +64,6 @@ public class WeatherValuesHandler extends BaseThingHandler implements SQLReaderL
     }
 
     @Override
-    public void dispose() {
-        try {
-            sqliteReader.close();
-        } catch (SQLException e1) {
-        }
-        super.dispose();
-    }
-
-    @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
     }
 
@@ -82,25 +72,11 @@ public class WeatherValuesHandler extends BaseThingHandler implements SQLReaderL
         try {
             sqliteReader = new SQLiteReader(getIPAddress(), getDBName());
             sqliteReader.addListener(this);
-            sqliteReader.open();
             scheduler.scheduleWithFixedDelay(sqliteReader, 1, getRefreshInterval(), TimeUnit.SECONDS);
             updateStatus(ThingStatus.ONLINE);
         } catch (ClassNotFoundException e) {
             logger.error("Error during loading drivers for database");
             sqliteReader.removeListener(this);
-            try {
-                sqliteReader.close();
-            } catch (SQLException e1) {
-            }
-            sqliteReader = null;
-            updateStatus(ThingStatus.OFFLINE);
-        } catch (SQLException e) {
-            logger.error("Error during opening database");
-            sqliteReader.removeListener(this);
-            try {
-                sqliteReader.close();
-            } catch (SQLException e1) {
-            }
             sqliteReader = null;
             updateStatus(ThingStatus.OFFLINE);
         }
