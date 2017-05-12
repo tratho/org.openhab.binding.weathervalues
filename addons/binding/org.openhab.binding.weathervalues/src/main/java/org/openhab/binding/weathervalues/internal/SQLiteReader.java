@@ -96,6 +96,7 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     @Override
     public void callAllListener() {
+        logger.debug("callAllListener()");
         try {
             open();
             try {
@@ -287,28 +288,32 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     public State getBarometer() {
         if (barometer != null) {
-            return new DecimalType(barometer);
+            double value = Utility.round(barometer);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
 
     public State getOutdoorHumidity() {
         if (outHumidity != null) {
-            return new DecimalType(outHumidity);
+            double value = Utility.round(outHumidity);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
 
     public State getOutdoorTemperature() {
         if (outTemp != null) {
-            return new DecimalType(outTemp);
+            double value = Utility.round(outTemp);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
 
     public State getWindSpeed() {
         if (windSpeed != null) {
-            return new DecimalType(windSpeed);
+            double value = Utility.round(windSpeed);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
@@ -324,14 +329,16 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     public State getRainRate() {
         if (rainRate != null) {
-            return new DecimalType(rainRate);
+            double value = Utility.round(rainRate);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
 
     public State getOutdoorTemperatureCurrentDayMin() {
         if (outTempDayMin != null) {
-            return new DecimalType(outTempDayMin);
+            double value = Utility.round(outTempDayMin);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
@@ -345,7 +352,8 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     public State getOutdoorTemperatureCurrentDayMax() {
         if (outTempDayMax != null) {
-            return new DecimalType(outTempDayMax);
+            double value = Utility.round(outTempDayMax);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
@@ -359,20 +367,22 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     public State getRainCurrentDay() {
         if (rainCurrentDay != null) {
-            return new DecimalType(rainCurrentDay);
+            double value = Utility.round(rainCurrentDay);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
 
     public State getRainCurrentWeek() {
         if (rainWeekInMM != null) {
-            return new DecimalType(rainWeekInMM);
+            double value = Utility.round(rainCurrentDay);
+            return new DecimalType(value);
         }
         return UnDefType.NULL;
     }
 
     public State getRainCurrentMonth() {
-        return listOfRainMonthInMM.get(new Time().getMonth() - 1);
+        return getRainMonth(new Time().getMonth() - 1);
     }
 
     public State getRainCurrentYear() {
@@ -395,13 +405,19 @@ public class SQLiteReader implements Runnable, SQLReader {
             }
         }
         if (checker) {
-            return new DecimalType(rainCurrentYear);
+            double value = Utility.round(rainCurrentYear);
+            return new DecimalType(value);
         } else {
             return UnDefType.NULL;
         }
     }
 
     public State getRainMonth(int month) {
-        return listOfRainMonthInMM.get(month - 1);
+        int index = month - 1;
+        if (listOfRainMonthInMM.get(index) instanceof DecimalType) {
+            double value = Utility.round(((DecimalType) listOfRainMonthInMM.get(index)).doubleValue());
+            return new DecimalType(value);
+        }
+        return UnDefType.NULL;
     }
 }
