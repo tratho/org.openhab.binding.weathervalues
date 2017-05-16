@@ -39,34 +39,6 @@ public class Converter {
         return value * 0.514444;
     }
 
-    public static WindDirection grad_to_windDirection(double value) {
-        WindDirection windDir;
-
-        if (value == 360) {
-            value = 0;
-        }
-        if (value >= 0 && value < 45) {
-            windDir = WindDirection.North;
-        } else if (value >= 45 && value < 90) {
-            windDir = WindDirection.NorthEast;
-        } else if (value >= 90 && value < 135) {
-            windDir = WindDirection.East;
-        } else if (value >= 135 && value < 180) {
-            windDir = WindDirection.SouthEast;
-        } else if (value >= 180 && value < 225) {
-            windDir = WindDirection.South;
-        } else if (value >= 225 && value < 270) {
-            windDir = WindDirection.SouthWest;
-        } else if (value >= 270 && value < 315) {
-            windDir = WindDirection.West;
-        } else if (value >= 315 && value < 360) {
-            windDir = WindDirection.NorthWest;
-        } else {
-            windDir = WindDirection.Unknown;
-        }
-        return windDir;
-    }
-
     public static Time seconds_to_Time(long value) {
         return new Time(value * 1000);
     }
