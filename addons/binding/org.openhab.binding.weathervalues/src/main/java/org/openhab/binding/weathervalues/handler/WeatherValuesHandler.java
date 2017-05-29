@@ -11,6 +11,7 @@ package org.openhab.binding.weathervalues.handler;
 import static org.openhab.binding.weathervalues.WeatherValuesBindingConstants.*;
 
 import java.math.BigDecimal;
+import java.time.Month;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -84,32 +85,34 @@ public class WeatherValuesHandler extends BaseThingHandler implements SQLReaderL
 
     @Override
     public void refreshValues() {
-        updateState(CHANNEL_BAROMETER, sqliteReader.getBarometer());
-        updateState(CHANNEL_OUTSIDE_TEMPERATURE, sqliteReader.getOutdoorTemperature());
-        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MIN, sqliteReader.getOutdoorTemperatureCurrentDayMin());
-        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MIN_TIME, sqliteReader.getOutdoorTemperatureCurrentDayMinTime());
-        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MAX, sqliteReader.getOutdoorTemperatureCurrentDayMax());
-        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MAX_TIME, sqliteReader.getOutdoorTemperatureCurrentDayMaxTime());
-        updateState(CHANNEL_OUTSIDE_HUMIDITY, sqliteReader.getOutdoorHumidity());
-        updateState(CHANNEL_WIND_SPEED, sqliteReader.getWindSpeed());
-        updateState(CHANNEL_WIND_DIRECTION, sqliteReader.getWindDirection());
-        updateState(CHANNEL_RAIN_RATE, sqliteReader.getRainRate());
-        updateState(CHANNEL_RAIN_CURRENT_DAY, sqliteReader.getRainCurrentDay());
-        updateState(CHANNEL_RAIN_CURRENT_WEEK, sqliteReader.getRainCurrentWeek());
-        updateState(CHANNEL_RAIN_CURRENT_MONTH, sqliteReader.getRainCurrentMonth());
-        updateState(CHANNEL_RAIN_CURRENT_YEAR, sqliteReader.getRainCurrentYear());
-        updateState(CHANNEL_RAIN_MONTH1, sqliteReader.getRainMonth(1));
-        updateState(CHANNEL_RAIN_MONTH2, sqliteReader.getRainMonth(2));
-        updateState(CHANNEL_RAIN_MONTH3, sqliteReader.getRainMonth(3));
-        updateState(CHANNEL_RAIN_MONTH4, sqliteReader.getRainMonth(4));
-        updateState(CHANNEL_RAIN_MONTH5, sqliteReader.getRainMonth(5));
-        updateState(CHANNEL_RAIN_MONTH6, sqliteReader.getRainMonth(6));
-        updateState(CHANNEL_RAIN_MONTH7, sqliteReader.getRainMonth(7));
-        updateState(CHANNEL_RAIN_MONTH8, sqliteReader.getRainMonth(8));
-        updateState(CHANNEL_RAIN_MONTH9, sqliteReader.getRainMonth(9));
-        updateState(CHANNEL_RAIN_MONTH10, sqliteReader.getRainMonth(10));
-        updateState(CHANNEL_RAIN_MONTH11, sqliteReader.getRainMonth(11));
-        updateState(CHANNEL_RAIN_MONTH12, sqliteReader.getRainMonth(12));
+        updateState(CHANNEL_BAROMETER, sqliteReader.outdoorClimate.getBarometer());
+        updateState(CHANNEL_OUTSIDE_TEMPERATURE, sqliteReader.outdoorClimate.getTemperature());
+        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MIN, sqliteReader.outdoorClimate.getTemperatureMinimum());
+        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MIN_TIME, sqliteReader.outdoorClimate.getTemperatureMinimumTime());
+        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MAX, sqliteReader.outdoorClimate.getTemperatureMaximum());
+        updateState(CHANNEL_OUTSIDE_TEMP_DAY_MAX_TIME, sqliteReader.outdoorClimate.getTemperatureMaximumTime());
+        updateState(CHANNEL_OUTSIDE_HUMIDITY, sqliteReader.outdoorClimate.getHumidity());
+
+        updateState(CHANNEL_WIND_SPEED, sqliteReader.wind.getSpeed());
+        updateState(CHANNEL_WIND_DIRECTION, sqliteReader.wind.getDirection());
+
+        updateState(CHANNEL_RAIN_RATE, sqliteReader.rain.getRainRateCurrent());
+        updateState(CHANNEL_RAIN_CURRENT_DAY, sqliteReader.rain.getRainCurrentDay());
+        updateState(CHANNEL_RAIN_CURRENT_WEEK, sqliteReader.rain.getRainCurrentWeek());
+        updateState(CHANNEL_RAIN_CURRENT_MONTH, sqliteReader.rain.getRainCurrentMonth());
+        updateState(CHANNEL_RAIN_CURRENT_YEAR, sqliteReader.rain.getRainCurrentYear());
+        updateState(CHANNEL_RAIN_MONTH1, sqliteReader.rain.getRainMonth(Month.JANUARY));
+        updateState(CHANNEL_RAIN_MONTH2, sqliteReader.rain.getRainMonth(Month.FEBRUARY));
+        updateState(CHANNEL_RAIN_MONTH3, sqliteReader.rain.getRainMonth(Month.MARCH));
+        updateState(CHANNEL_RAIN_MONTH4, sqliteReader.rain.getRainMonth(Month.APRIL));
+        updateState(CHANNEL_RAIN_MONTH5, sqliteReader.rain.getRainMonth(Month.MAY));
+        updateState(CHANNEL_RAIN_MONTH6, sqliteReader.rain.getRainMonth(Month.JUNE));
+        updateState(CHANNEL_RAIN_MONTH7, sqliteReader.rain.getRainMonth(Month.JULY));
+        updateState(CHANNEL_RAIN_MONTH8, sqliteReader.rain.getRainMonth(Month.AUGUST));
+        updateState(CHANNEL_RAIN_MONTH9, sqliteReader.rain.getRainMonth(Month.SEPTEMBER));
+        updateState(CHANNEL_RAIN_MONTH10, sqliteReader.rain.getRainMonth(Month.OCTOBER));
+        updateState(CHANNEL_RAIN_MONTH11, sqliteReader.rain.getRainMonth(Month.NOVEMBER));
+        updateState(CHANNEL_RAIN_MONTH12, sqliteReader.rain.getRainMonth(Month.DECEMBER));
     }
 
 }

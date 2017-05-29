@@ -6,13 +6,15 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.openhab.binding.weathervalues.internal;
+package org.openhab.binding.weathervalues.internal.data;
 
+import java.time.Month;
 import java.util.List;
 
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.core.types.UnDefType;
+import org.openhab.binding.weathervalues.internal.Time;
 
 /**
  * The {@link Rain}
@@ -33,18 +35,6 @@ public class Rain {
         this.rainCurrentDay = rainCurrentDay;
         this.rainCurrentWeek = rainCurrentWeek;
         this.listOfRainPerMonth = listOfRainPerMonth;
-    }
-
-    @Override
-    public int hashCode() {
-        Double hashValue = 0.0;
-        if (rainRateCurrent != null) {
-            hashValue += rainRateCurrent;
-        }
-        if (rainCurrentDay != null) {
-            hashValue += rainCurrentDay;
-        }
-        return hashValue.hashCode();
     }
 
     public State getRainRateCurrent() {
@@ -72,7 +62,7 @@ public class Rain {
     }
 
     public State getRainCurrentMonth() {
-        return getRainMonth(new Time().getMonth() - 1);
+        return getRainMonth(new Time().getMonth());
     }
 
     public State getRainCurrentYear() {
@@ -94,8 +84,8 @@ public class Rain {
         }
     }
 
-    public State getRainMonth(int month) {
-        int index = month - 1;
+    public State getRainMonth(Month month) {
+        int index = month.getValue() - 1;
         if (listOfRainPerMonth.get(index) != null) {
             double value = Utility.round(listOfRainPerMonth.get(index));
             return new DecimalType(value);

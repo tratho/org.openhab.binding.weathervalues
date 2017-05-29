@@ -12,10 +12,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.smarthome.core.types.State;
+import org.openhab.binding.weathervalues.internal.data.OutdoorClimate;
+import org.openhab.binding.weathervalues.internal.data.Rain;
+import org.openhab.binding.weathervalues.internal.data.Wind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +37,9 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     private Connection connection;
 
-    private OutdoorClimate outdoorClimate;
-    private Wind wind;
-    private Rain rain;
+    public OutdoorClimate outdoorClimate;
+    public Wind wind;
+    public Rain rain;
 
     // Rain Data
     public SQLiteReader(String host, String dbName) throws ClassNotFoundException {
@@ -77,21 +80,11 @@ public class SQLiteReader implements Runnable, SQLReader {
         logger.debug("callAllListener()");
         try {
             open();
-            try {
-                pullOutdoorClimate();
-            } catch (SQLException e) {
-                logger.warn("Error during reading Climate values form database");
-            }
-            try {
-                pullWind();
-            } catch (SQLException e) {
-                logger.warn("Error during reading Wind values form database");
-            }
-            try {
-                pullRain();
-            } catch (SQLException e) {
-                logger.warn("Error during reading Rain values form database");
-            }
+
+            pullOutdoorClimate();
+            pullWind();
+            pullRain();
+
             close();
             for (SQLReaderListener listener : listOfListener) {
                 listener.refreshValues();
@@ -101,192 +94,332 @@ public class SQLiteReader implements Runnable, SQLReader {
         }
     }
 
-    private void pullOutdoorClimate() throws SQLException {
+    private void pullOutdoorClimate() {
+        Double outTemp = null;
+        Double outTempExtra = null;
+        Double outHumidity = null;
+        Double outHumidityExtra = null;
+        Double barometer = null;
+
+        Double outTempDayMin = null;
+        Double outTempDayMax = null;
+        Time outTempDayMinTime = null;
+        Time outTempDayMaxTime = null;
+
         ResultSet resultSet;
-        resultSet = getResultSet(
-                "SELECT barometer, outTemp, outHumidity, ExtraTemp1, extraHumid1 FROM archive ORDER BY dateTime DESC LIMIT 1");
 
-        Double outTemp;
-        Double outTempExtra;
-        Double outHumidity;
-        Double outHumidityExtra;
-        Double barometer;
-
-        String sOutTemp = resultSet.getString("outTemp");
-        if (sOutTemp != null) {
-            outTemp = Converter.fahrenheit_to_Celsius(Double.parseDouble(sOutTemp));
-        } else {
-            outTemp = null;
-        }
-
-        String sOutTempExtra = resultSet.getString("extraTemp1");
-        if (sOutTempExtra != null) {
-            outTempExtra = Converter.fahrenheit_to_Celsius(Double.parseDouble(sOutTempExtra));
-        } else {
-            outTempExtra = null;
-        }
-
-        String sOutHumidity = resultSet.getString("outHumidity");
-        if (sOutHumidity != null) {
-            outHumidity = Double.parseDouble(sOutHumidity);
-        } else {
-            outHumidity = null;
-        }
-
-        String sOutHumidityExtra = resultSet.getString("extraHumid1");
-        if (sOutHumidityExtra != null) {
-            outHumidityExtra = Double.parseDouble(sOutHumidityExtra);
-        } else {
-            outHumidityExtra = null;
-        }
-
-        String sBarometer = resultSet.getString("barometer");
-        if (sBarometer != null) {
-            barometer = Converter.inchOfHG_to_Millibar(Double.parseDouble(sBarometer));
-        } else {
-            barometer = null;
-        }
-
-        resultSet.close();
-
-        resultSet = getResultSet(
-                "SELECT min, minTime, max, maxTime FROM archive_day_outTemp ORDER BY dateTime DESC LIMIT 1");
-
-        Double outTempDayMin;
-        Double outTempDayMax;
-        Time outTempDayMinTime;
-        Time outTempDayMaxTime;
-
-        String sMinOutTemp = resultSet.getString("min");
         try {
-            outTempDayMin = Converter.fahrenheit_to_Celsius(Double.parseDouble(sMinOutTemp));
-        } catch (NumberFormatException e) {
-            outTempDayMin = null;
+            resultSet = getResultSet(
+                    "SELECT barometer, outTemp, outHumidity, ExtraTemp1, extraHumid1 FROM archive ORDER BY dateTime DESC LIMIT 1");
+        } catch (SQLException e) {
+            resultSet = null;
         }
 
-        String sMaxOutTemp = resultSet.getString("max");
+        if (resultSet != null) {
+            String sOutTemp;
+            try {
+                sOutTemp = resultSet.getString("outTemp");
+            } catch (SQLException e1) {
+                sOutTemp = null;
+            }
+            if (sOutTemp != null) {
+                outTemp = Converter.fahrenheit_to_Celsius(Double.parseDouble(sOutTemp));
+            } else {
+                outTemp = null;
+            }
+
+            String sOutTempExtra;
+            try {
+                sOutTempExtra = resultSet.getString("extraTemp1");
+            } catch (SQLException e1) {
+                sOutTempExtra = null;
+            }
+            if (sOutTempExtra != null) {
+                outTempExtra = Converter.fahrenheit_to_Celsius(Double.parseDouble(sOutTempExtra));
+            } else {
+                outTempExtra = null;
+            }
+
+            String sOutHumidity;
+            try {
+                sOutHumidity = resultSet.getString("outHumidity");
+            } catch (SQLException e1) {
+                sOutHumidity = null;
+            }
+            if (sOutHumidity != null) {
+                outHumidity = Double.parseDouble(sOutHumidity);
+            } else {
+                outHumidity = null;
+            }
+
+            String sOutHumidityExtra;
+            try {
+                sOutHumidityExtra = resultSet.getString("extraHumid1");
+            } catch (SQLException e1) {
+                sOutHumidityExtra = null;
+            }
+            if (sOutHumidityExtra != null) {
+                outHumidityExtra = Double.parseDouble(sOutHumidityExtra);
+            } else {
+                outHumidityExtra = null;
+            }
+
+            String sBarometer;
+            try {
+                sBarometer = resultSet.getString("barometer");
+            } catch (SQLException e1) {
+                sBarometer = null;
+            }
+            if (sBarometer != null) {
+                barometer = Converter.inchOfHG_to_Millibar(Double.parseDouble(sBarometer));
+            } else {
+                barometer = null;
+            }
+
+            try {
+                resultSet.close();
+            } catch (SQLException e1) {
+                resultSet = null;
+            }
+        }
+
         try {
-            outTempDayMax = Converter.fahrenheit_to_Celsius(Double.parseDouble(sMaxOutTemp));
-        } catch (NumberFormatException e) {
-            outTempDayMax = null;
+            resultSet = getResultSet(
+                    "SELECT min, minTime, max, maxTime FROM archive_day_outTemp ORDER BY dateTime DESC LIMIT 1");
+        } catch (SQLException e) {
+            resultSet = null;
         }
 
-        String sMinOutTempTime = resultSet.getString("minTime");
-        try {
-            outTempDayMinTime = Converter.seconds_to_Time(Long.parseLong(sMinOutTempTime));
-        } catch (NumberFormatException e) {
-            outTempDayMinTime = null;
+        if (resultSet != null) {
+            String sMinOutTemp;
+            try {
+                sMinOutTemp = resultSet.getString("min");
+            } catch (SQLException e1) {
+                sMinOutTemp = null;
+            }
+            try {
+                outTempDayMin = Converter.fahrenheit_to_Celsius(Double.parseDouble(sMinOutTemp));
+            } catch (NumberFormatException e) {
+                outTempDayMin = null;
+            }
+
+            String sMaxOutTemp;
+            try {
+                sMaxOutTemp = resultSet.getString("max");
+            } catch (SQLException e1) {
+                sMaxOutTemp = null;
+            }
+            try {
+                outTempDayMax = Converter.fahrenheit_to_Celsius(Double.parseDouble(sMaxOutTemp));
+            } catch (NumberFormatException e) {
+                outTempDayMax = null;
+            }
+
+            String sMinOutTempTime;
+            try {
+                sMinOutTempTime = resultSet.getString("minTime");
+            } catch (SQLException e1) {
+                sMinOutTempTime = null;
+            }
+            try {
+                outTempDayMinTime = Converter.seconds_to_Time(Long.parseLong(sMinOutTempTime));
+            } catch (NumberFormatException e) {
+                outTempDayMinTime = null;
+            }
+
+            String sMaxOutTempTime;
+            try {
+                sMaxOutTempTime = resultSet.getString("maxTime");
+            } catch (SQLException e1) {
+                sMaxOutTempTime = null;
+            }
+            try {
+                outTempDayMaxTime = Converter.seconds_to_Time(Long.parseLong(sMaxOutTempTime));
+            } catch (NumberFormatException e) {
+                outTempDayMaxTime = null;
+            }
+
+            try {
+                resultSet.close();
+            } catch (SQLException e1) {
+                resultSet = null;
+            }
         }
-
-        String sMaxOutTempTime = resultSet.getString("maxTime");
-        try {
-            outTempDayMaxTime = Converter.seconds_to_Time(Long.parseLong(sMaxOutTempTime));
-        } catch (NumberFormatException e) {
-            outTempDayMaxTime = null;
-        }
-
-        resultSet.close();
-
         outdoorClimate = new OutdoorClimate(outTemp, outTempExtra, outHumidity, outHumidityExtra, barometer,
                 outTempDayMin, outTempDayMax, outTempDayMinTime, outTempDayMaxTime);
     }
 
-    private void pullWind() throws SQLException {
+    private void pullWind() {
+        Integer windDir = null;
+        Double windSpeed = null;
+
         ResultSet resultSet;
-        resultSet = getResultSet("SELECT windSpeed, windDir FROM archive ORDER BY dateTime DESC LIMIT 1");
 
-        Integer windDir;
-        Double windSpeed;
-        String sWindDir = resultSet.getString("windDir");
-        if (sWindDir != null) {
-            windDir = (int) Double.parseDouble(sWindDir);
-        } else {
-            windDir = null;
+        try {
+            resultSet = getResultSet("SELECT windSpeed, windDir FROM archive ORDER BY dateTime DESC LIMIT 1");
+        } catch (SQLException e) {
+            resultSet = null;
         }
 
-        String sWindSpeed = resultSet.getString("windSpeed");
-        if (sWindSpeed != null) {
-            windSpeed = Converter.knoten_to_kmh(Double.parseDouble(sWindSpeed));
-        } else {
-            windSpeed = null;
-        }
+        if (resultSet != null) {
+            String sWindDir;
+            try {
+                sWindDir = resultSet.getString("windDir");
+            } catch (SQLException e) {
+                sWindDir = null;
+            }
+            if (sWindDir != null) {
+                windDir = (int) Double.parseDouble(sWindDir);
+            } else {
+                windDir = null;
+            }
 
+            String sWindSpeed;
+            try {
+                sWindSpeed = resultSet.getString("windSpeed");
+            } catch (SQLException e) {
+                sWindSpeed = null;
+            }
+            if (sWindSpeed != null) {
+                windSpeed = Converter.knoten_to_kmh(Double.parseDouble(sWindSpeed));
+            } else {
+                windSpeed = null;
+            }
+
+            try {
+                resultSet.close();
+            } catch (SQLException e1) {
+                resultSet = null;
+            }
+        }
         wind = new Wind(windDir, windSpeed);
-
-        resultSet.close();
     }
 
-    private void pullRain() throws SQLException {
+    private void pullRain() {
+        Double rainRate = null;
+        Double rainCurrentDay = null;
+        Double rainCurrentWeek = null;
+        List<Double> listOfRainPerMonth = new ArrayList<>();
+
         ResultSet resultSet;
-        resultSet = getResultSet("SELECT rainRate FROM archive ORDER BY dateTime DESC LIMIT 1");
 
-        Double rainRate;
-
-        String sRainRate = resultSet.getString("rainRate");
-        if (sRainRate != null) {
-            rainRate = Converter.inchPerHour_to_MillimeterPerHour(Double.parseDouble(sRainRate));
-        } else {
-            rainRate = null;
-        }
-
-        resultSet.close();
-
-        resultSet = getResultSet("SELECT sum FROM archive_day_rain ORDER BY dateTime DESC LIMIT 1");
-
-        Double rainCurrentDay;
-
-        String sSumRain = resultSet.getString("sum");
         try {
-            rainCurrentDay = Converter.inch_to_Millimeter(Double.parseDouble(sSumRain));
-        } catch (NumberFormatException e) {
-            rainCurrentDay = null;
+            resultSet = getResultSet("SELECT rainRate FROM archive ORDER BY dateTime DESC LIMIT 1");
+        } catch (SQLException e) {
+            resultSet = null;
         }
 
-        resultSet.close();
+        if (resultSet != null) {
+            String sRainRate;
+            try {
+                sRainRate = resultSet.getString("rainRate");
+            } catch (SQLException e) {
+                sRainRate = null;
+            }
+            if (sRainRate != null) {
+                rainRate = Converter.inchPerHour_to_MillimeterPerHour(Double.parseDouble(sRainRate));
+            } else {
+                rainRate = null;
+            }
+
+            try {
+                resultSet.close();
+            } catch (SQLException e1) {
+                resultSet = null;
+            }
+        }
+
+        try {
+            resultSet = getResultSet("SELECT sum FROM archive_day_rain ORDER BY dateTime DESC LIMIT 1");
+        } catch (SQLException e) {
+            resultSet = null;
+        }
+        if (resultSet != null) {
+            String sSumRain;
+            try {
+                sSumRain = resultSet.getString("sum");
+            } catch (SQLException e1) {
+                sSumRain = null;
+            }
+            try {
+                rainCurrentDay = Converter.inch_to_Millimeter(Double.parseDouble(sSumRain));
+            } catch (NumberFormatException e) {
+                rainCurrentDay = null;
+            }
+
+            try {
+                resultSet.close();
+            } catch (SQLException e1) {
+                resultSet = null;
+            }
+        }
+
+        try {
+            resultSet = getResultSet("SELECT dateTime, sum FROM archive_day_rain ORDER BY dateTime");
+        } catch (SQLException e) {
+            resultSet = null;
+        }
 
         List<Time> listOfTime = new ArrayList<>();
         List<Double> listOfRain = new ArrayList<>();
-
-        resultSet = getResultSet("SELECT dateTime, sum FROM archive_day_rain ORDER BY dateTime");
-
-        while (resultSet.next()) {
-            String sTimeInSeconds = resultSet.getString("dateTime");
-            String sRain = resultSet.getString("sum");
-
+        if (resultSet != null) {
             try {
-                listOfTime.add(0, Converter.seconds_to_Time(Long.parseLong(sTimeInSeconds)));
-            } catch (NumberFormatException e) {
-            }
-            try {
-                listOfRain.add(0, Converter.inch_to_Millimeter(Double.parseDouble(sRain)));
-            } catch (NumberFormatException e) {
-                if (listOfTime.size() != listOfRain.size()) {
-                    listOfTime.remove(0);
-                }
-            }
-        }
+                while (resultSet.next()) {
+                    String sTimeInSeconds = resultSet.getString("dateTime");
+                    String sRain = resultSet.getString("sum");
 
-        resultSet.close();
-
-        Double rainCurrentWeek = 0.0;
-        for (int i = 0; i < listOfTime.get(0).getDayOfWeek(); i++) {
-            rainCurrentWeek += listOfRain.get(i);
-        }
-
-        List<Double> listOfRainPerMonth = new ArrayList<>();
-        for (int month = 1; month <= 12; month++) {
-            double rainMonthTemp = 0;
-            for (int i = 0; i < listOfTime.size(); i++) {
-                if (listOfTime.get(i).getYear() == new Time().getYear()) {
-                    if (listOfTime.get(i).getMonth() == month) {
-                        rainMonthTemp += listOfRain.get(i);
+                    try {
+                        listOfTime.add(0, Converter.seconds_to_Time(Long.parseLong(sTimeInSeconds)));
+                    } catch (NumberFormatException e) {
+                    }
+                    try {
+                        listOfRain.add(0, Converter.inch_to_Millimeter(Double.parseDouble(sRain)));
+                    } catch (NumberFormatException e) {
+                        if (listOfTime.size() != listOfRain.size()) {
+                            listOfTime.remove(0);
+                        }
                     }
                 }
+            } catch (SQLException e) {
+                listOfTime.clear();
+                listOfRain.clear();
             }
-            if (month > new Time().getMonth()) {
+
+            try {
+                resultSet.close();
+            } catch (SQLException e1) {
+                resultSet = null;
+            }
+        }
+
+        if (listOfTime.size() > 0) {
+            for (int i = 0; i < listOfTime.get(0).getDayOfWeek(); i++) {
+                if (rainCurrentWeek == null) {
+                    rainCurrentWeek = listOfRain.get(i);
+                } else {
+                    rainCurrentWeek += listOfRain.get(i);
+                }
+            }
+
+            for (int i = 1; i <= 12; i++) {
+                Month month = Month.of(i);
+                double rainMonthTemp = 0;
+                for (int j = 0; j < listOfTime.size(); j++) {
+                    if (listOfTime.get(j).getYear() == new Time().getYear()) {
+                        if (listOfTime.get(j).getMonth() == month) {
+                            rainMonthTemp += listOfRain.get(j);
+                        }
+                    }
+                }
+                if (month.getValue() > new Time().getMonth().getValue()) {
+                    listOfRainPerMonth.add(null);
+                } else {
+                    listOfRainPerMonth.add(rainMonthTemp);
+                }
+            }
+        } else {
+            for (int i = 1; i <= 12; i++) {
                 listOfRainPerMonth.add(null);
-            } else {
-                listOfRainPerMonth.add(rainMonthTemp);
             }
         }
 
@@ -299,65 +432,5 @@ public class SQLiteReader implements Runnable, SQLReader {
 
     private void close() throws SQLException {
         connection.close();
-    }
-
-    public State getBarometer() {
-        return outdoorClimate.getBarometer();
-    }
-
-    public State getOutdoorHumidity() {
-        return outdoorClimate.getHumidity();
-    }
-
-    public State getOutdoorTemperature() {
-        return outdoorClimate.getTemperature();
-    }
-
-    public State getOutdoorTemperatureCurrentDayMin() {
-        return outdoorClimate.getTemperatureMinimum();
-    }
-
-    public State getOutdoorTemperatureCurrentDayMinTime() {
-        return outdoorClimate.getTemperatureMinimumTime();
-    }
-
-    public State getOutdoorTemperatureCurrentDayMax() {
-        return outdoorClimate.getTemperatureMaximum();
-    }
-
-    public State getOutdoorTemperatureCurrentDayMaxTime() {
-        return outdoorClimate.getTemperatureMaximumTime();
-    }
-
-    public State getWindSpeed() {
-        return wind.getSpeed();
-    }
-
-    public State getWindDirection() {
-        return wind.getDirection();
-    }
-
-    public State getRainRate() {
-        return rain.getRainRateCurrent();
-    }
-
-    public State getRainCurrentDay() {
-        return rain.getRainCurrentDay();
-    }
-
-    public State getRainCurrentWeek() {
-        return rain.getRainCurrentWeek();
-    }
-
-    public State getRainCurrentMonth() {
-        return rain.getRainCurrentMonth();
-    }
-
-    public State getRainCurrentYear() {
-        return rain.getRainCurrentYear();
-    }
-
-    public State getRainMonth(int month) {
-        return rain.getRainMonth(month);
     }
 }

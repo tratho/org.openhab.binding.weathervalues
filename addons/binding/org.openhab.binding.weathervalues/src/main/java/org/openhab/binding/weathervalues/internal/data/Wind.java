@@ -6,9 +6,7 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.openhab.binding.weathervalues.internal;
-
-import java.util.Objects;
+package org.openhab.binding.weathervalues.internal.data;
 
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.StringType;
@@ -54,29 +52,6 @@ public class Wind {
             this.value = null;
         }
         this.speed = speedInKmh;
-    }
-
-    @Override
-    public int hashCode() {
-        return value.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (obj instanceof String) {
-            return obj.equals(value);
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        Wind other = (Wind) obj;
-        return Objects.equals(this.value, other.value);
     }
 
     public State getDirection() {
